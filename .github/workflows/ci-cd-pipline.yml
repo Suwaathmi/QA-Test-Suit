@@ -91,32 +91,27 @@ on:
     branches: [ main, master ]
     paths:
       - '**'
-      - '!frontend/**'  # Exclude frontend changes
+      - '!frontend/**'
   pull_request:
     branches: [ main, master ]
     paths:
       - '**'
-      - '!frontend/**'  # Exclude frontend changes
+      - '!frontend/**'
 
 jobs:
   backend:
     runs-on: ubuntu-latest
 
     services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: rootpassword
-          MYSQL_DATABASE: testdb
-          MYSQL_USER: testuser
-          MYSQL_PASSWORD: testpass
-        options: >-
-          --health-cmd "mysqladmin ping -h localhost -u root --password=rootpassword"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+      mongo:
+        image: mongo:6.0
         ports:
-          - 3306:3306
+          - 27017:27017
+        options: >-
+          --health-cmd="mongosh --eval 'db.stats()'"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
 
     steps:
       - name: Checkout code
@@ -129,26 +124,21 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Wait for MySQL to be ready
-        run: |
-          for i in {1..30}; do
-            if mysqladmin ping -h"localhost" -u"root" -p"rootpassword" --silent; then
-              echo "MySQL is ready!"
-              break
-            else
-              echo "MySQL not ready yet... attempt $i"
-              sleep 2
-            fi
-          done
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
 
-      - name: Build and run tests
+      - name: Build and run all tests (unit + integration)
         run: mvn clean verify -Dtest=!**/ui/**
         env:
+          SPRING_DATA_MONGODB_URI: mongodb://localhost:27017/testdb
           SPRING_PROFILES_ACTIVE: test
-          SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/testdb
-          SPRING_DATASOURCE_USERNAME: root
-          SPRING_DATASOURCE_PASSWORD: rootpassword
-          SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
+
+      - name: Run Selenium UI tests (headless)
+        run: xvfb-run mvn test -Dtest=SignInTest,SignUpTest
 
       - name: Upload backend artifacts
         uses: actions/upload-artifact@v4
