@@ -1,16 +1,12 @@
-
 import { createContext, useContext, useState, useEffect } from 'react';
 import http from '../services/http'; // axios instance
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
- 
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
-
 
   useEffect(() => {
     const user = localStorage.getItem('user');
@@ -18,18 +14,14 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-
-
- 
+  // Login
   const login = async (email, password) => {
     try {
       setError('');
       setLoading(true);
 
-      
       const { data: users } = await http.get('/users/getAllUsers');
 
-   
       const user = (users || []).find(
         (u) => u?.email?.toLowerCase() === email.toLowerCase() && u?.password === password
       );
@@ -50,24 +42,24 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-
-  // Regis
+  // Register
   const register = async (name, email, password) => {
     try {
       setError('');
       setLoading(true);
 
       const [firstName, ...rest] = (name || '').trim().split(' ');
-      const lastName = rest.join(' ');
+      let lastName = rest.join(' ');
+      if (!lastName) lastName = 'N/A'; // fallback if no last name provided
 
       const { data } = await http.post('/users/addUser', {
-        firstName: firstName || name || '',
-        lastName: lastName || '',
+        firstName,
+        lastName,
         email,
         password,
       });
 
-      return data; //string msg
+      return data;
     } catch (err) {
       const msg = err.response?.data?.message || err.message;
       setError('Failed to register: ' + msg);
@@ -82,13 +74,10 @@ export const AuthProvider = ({ children }) => {
     setCurrentUser(null);
   };
 
-  
-  const value = { currentUser,login, register, logout, loading, error };
+  const value = { currentUser, login, register, logout, loading, error };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
-
-
 
 export const useAuth = () => useContext(AuthContext);
 export default AuthContext;

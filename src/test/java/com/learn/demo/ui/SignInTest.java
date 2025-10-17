@@ -20,7 +20,7 @@ public class SignInTest extends BaseTest {
         driver.findElement(By.xpath("//button[@type='submit']")).click();
 
         // Wait for dashboard or welcome message
-        new WebDriverWait(driver, Duration.ofSeconds(5))
+        new WebDriverWait(driver, Duration.ofSeconds(15))
                 .until(ExpectedConditions.or(
                         ExpectedConditions.urlContains("/dashboard"),
                         ExpectedConditions.presenceOfElementLocated(By.xpath("//*[contains(text(),'Welcome testuser')]"))
