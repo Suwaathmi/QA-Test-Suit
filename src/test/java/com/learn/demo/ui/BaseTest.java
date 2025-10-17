@@ -17,9 +17,10 @@ public class BaseTest {
         System.setProperty("webdriver.edge.driver", "D:\\WebDriver\\msedgedriver.exe");
 
         EdgeOptions options = new EdgeOptions();
+        options.addArguments("--headless=new");
+        options.addArguments("--disable-gpu");
         options.addArguments("--window-size=1920,1080");
-        // Remove headless for local testing unless needed
-        // options.addArguments("--headless");
+
 
         driver = new EdgeDriver(options);
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
