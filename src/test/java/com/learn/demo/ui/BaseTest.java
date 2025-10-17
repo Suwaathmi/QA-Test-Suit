@@ -6,7 +6,6 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.edge.EdgeDriver;
 import org.openqa.selenium.edge.EdgeOptions;
 
-
 import java.time.Duration;
 
 public class BaseTest {
@@ -14,11 +13,13 @@ public class BaseTest {
 
     @BeforeEach
     public void setUp() {
-        // Manually set path to Edge WebDriver
+        // Point to manually installed EdgeDriver
         System.setProperty("webdriver.edge.driver", "D:\\WebDriver\\msedgedriver.exe");
 
         EdgeOptions options = new EdgeOptions();
         options.addArguments("--window-size=1920,1080");
+        // Remove headless for local testing unless needed
+        // options.addArguments("--headless");
 
         driver = new EdgeDriver(options);
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
